@@ -1,0 +1,39 @@
+# Build artifacts
+[Oo]bj/
+[Bb]in/
+**/[Bb]in/
+**/[Oo]bj/
+
+# Visual Studio / VS Code
+.vs/
+.vscode/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# .NET
+*.dll
+*.pdb
+*.cache
+*.log
+*.nupkg
+*.snupkg
+*.db
+*.db-shm
+*.db-wal
+
+# SQLite
+*.sqlite
+*.sqlite3
+*.db
+
+# Node / Vite
+node_modules/
+dist/
+coverage/
+.vite/
+
+# OS files
+.DS_Store
+Thumbs.db
