@@ -28,7 +28,7 @@ car-show-registration-Fuentes-Gatona/
 ## Team Members and Roles
 
 - Jomar Fuentes — Backend Developer
-- Partner — Frontend Developer
+- Jomar Gatona — Frontend Developer
 
 ## Tech Stack
 
