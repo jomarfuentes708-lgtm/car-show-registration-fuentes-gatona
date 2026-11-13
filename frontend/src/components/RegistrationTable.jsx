@@ -1,200 +1,329 @@
-import { useEffect, useMemo, useState } from 'react';
-import { getRegistrations } from '../api/sample-data';
-import PaymentBadge from './PaymentBadge';
-import StatusBadge from './StatusBadge';
 
-const formatPeso = (value) =>
-  new Intl.NumberFormat('en-PH', {
-    style: 'currency',
-    currency: 'PHP',
-    maximumFractionDigits: 2
-  }).format(value);
+import { useMemo, useState } from "react";
+import { Search, RefreshCw, ChevronLeft, ChevronRight } from "lucide-react";
 
-export default function RegistrationTable() {
-  const [search, setSearch] = useState('');
-  const [typeFilter, setTypeFilter] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
-  const [page, setPage] = useState(1);
-  const [data, setData] = useState({ items: [], page: 1, pageSize: 10, totalCount: 0, totalPages: 1 });
-  const [loading, setLoading] = useState(true);
+const peso = (amount) =>
+  new Intl.NumberFormat("en-PH", {
+    style: "currency",
+    currency: "PHP",
+  }).format(amount);
 
-  useEffect(() => {
-    let active = true;
-
-    async function loadRegistrations() {
-      setLoading(true);
-      try {
-        const response = await getRegistrations({
-          participantName: search,
-          type: typeFilter,
-          status: statusFilter,
-          page,
-          pageSize: 10
-        });
-
-        if (active) {
-          setData(response);
-        }
-      } finally {
-        if (active) {
-          setLoading(false);
-        }
-      }
-    }
-
-    loadRegistrations();
-
-    return () => {
-      active = false;
-    };
-  }, [search, typeFilter, statusFilter, page]);
-
-  const totalPages = useMemo(() => Math.max(1, data.totalPages), [data.totalPages]);
-
-  const summaryText = useMemo(() => {
-    if (loading) {
-      return 'Loading registrations...';
-    }
-
-    if (data.totalCount === 0) {
-      return 'No registrations found for the current filters.';
-    }
-
-    const first = (data.page - 1) * data.pageSize + 1;
-    const last = Math.min(data.page * data.pageSize, data.totalCount);
-    return `Showing ${first}-${last} of ${data.totalCount} registrations`;
-  }, [data, loading]);
+function Badge({ value, category }) {
+  const styles = {
+    type: {
+      Competitor: "bg-red-100 text-red-700",
+      Exhibitor: "bg-blue-100 text-blue-700",
+      VIP: "bg-amber-100 text-amber-800",
+    },
+    status: {
+      Confirmed: "bg-green-100 text-green-800",
+      CheckedIn: "bg-purple-100 text-purple-800",
+      Pending: "bg-amber-100 text-amber-800",
+      Cancelled: "bg-slate-200 text-slate-700",
+    },
+    payment: {
+      Paid: "bg-green-600 text-white",
+      Partial: "bg-amber-500 text-white",
+      Unpaid: "bg-red-600 text-white",
+    },
+  };
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
-      <div className="border-b border-slate-200 px-5 py-4 dark:border-slate-800">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div>
-            <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-50">Registration List</h2>
-            <p className="text-sm text-slate-500 dark:text-slate-400">{summaryText}</p>
-          </div>
+    <span
+      className={`inline-flex whitespace-nowrap rounded-full px-3 py-1 text-xs font-bold ${
+        styles[category][value]
+      }`}
+    >
+      {value}
+    </span>
+  );
+}
 
-          <div className="flex flex-col gap-3 sm:flex-row">
-            <input
-              type="text"
-              value={search}
-              onChange={(event) => {
-                setPage(1);
-                setSearch(event.target.value);
-              }}
-              placeholder="Search participant..."
-              className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-200 sm:w-64 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-400 dark:focus:ring-sky-900"
-            />
+export default function RegistrationTable({ data }) {
+  const [search, setSearch] = useState("");
+  const [type, setType] = useState("All");
+  const [status, setStatus] = useState("All");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
-            <select
-              value={typeFilter}
-              onChange={(event) => {
-                setPage(1);
-                setTypeFilter(event.target.value);
-              }}
-              className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-400 dark:focus:ring-sky-900"
-            >
-              <option value="">All Types</option>
-              <option value="Exhibitor">Exhibitor</option>
-              <option value="Competitor">Competitor</option>
-              <option value="VIP">VIP</option>
-            </select>
+  const filteredData = useMemo(() => {
+    return data.filter((item) => {
+      const query = search.toLowerCase();
 
-            <select
-              value={statusFilter}
-              onChange={(event) => {
-                setPage(1);
-                setStatusFilter(event.target.value);
-              }}
-              className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-400 dark:focus:ring-sky-900"
-            >
-              <option value="">All Status</option>
-              <option value="Pending">Pending</option>
-              <option value="Confirmed">Confirmed</option>
-              <option value="CheckedIn">Checked In</option>
-              <option value="Cancelled">Cancelled</option>
-            </select>
-          </div>
+      const matchesSearch =
+        item.name.toLowerCase().includes(query) ||
+        item.id.toLowerCase().includes(query) ||
+        item.car.toLowerCase().includes(query) ||
+        item.plate.toLowerCase().includes(query);
+
+      const matchesType = type === "All" || item.type === type;
+      const matchesStatus = status === "All" || item.status === status;
+
+      return matchesSearch && matchesType && matchesStatus;
+    });
+  }, [data, search, type, status]);
+
+  const totalPages = Math.ceil(filteredData.length / pageSize);
+
+  const safePage = Math.min(page, Math.max(totalPages, 1));
+
+  const startIndex = (safePage - 1) * pageSize;
+  const currentData = filteredData.slice(
+    startIndex,
+    startIndex + pageSize
+  );
+
+  const getPaymentStatus = (item) => {
+    if (item.paid === 0) return "Unpaid";
+    if (item.paid < item.fee) return "Partial";
+    return "Paid";
+  };
+
+  const clearFilters = () => {
+    setSearch("");
+    setType("All");
+    setStatus("All");
+    setPage(1);
+  };
+
+  const changePage = (newPage) => {
+    setPage(Math.max(1, Math.min(newPage, totalPages)));
+  };
+
+  return (
+    <section className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+
+      {/* Toolbar */}
+      <div className="flex flex-col gap-4 border-b border-slate-200 p-4 xl:flex-row xl:items-center">
+        <div className="relative flex-1">
+          <Search
+            className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"
+            size={20}
+          />
+          <input
+            type="text"
+            placeholder="Search participant name..."
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(1);
+            }}
+            className="w-full rounded-lg border border-slate-300 bg-slate-50 py-3 pl-11 pr-4 text-sm text-slate-800 outline-none transition focus:border-amber-400 focus:ring-2 focus:ring-amber-100"
+          />
+        </div>
+
+        <div className="flex flex-wrap items-center gap-3">
+          <label className="text-sm font-semibold text-slate-700">
+            Registration Type:
+          </label>
+
+          <select
+            value={type}
+            onChange={(e) => {
+              setType(e.target.value);
+              setPage(1);
+            }}
+            className="min-w-36 rounded-lg border border-slate-300 bg-white px-3 py-3 text-sm font-semibold text-slate-800 outline-none focus:border-amber-400"
+          >
+            <option value="All">All</option>
+            <option value="Competitor">Competitor</option>
+            <option value="Exhibitor">Exhibitor</option>
+            <option value="VIP">VIP</option>
+          </select>
+
+          <label className="text-sm font-semibold text-slate-700">
+            Status:
+          </label>
+
+          <select
+            value={status}
+            onChange={(e) => {
+              setStatus(e.target.value);
+              setPage(1);
+            }}
+            className="min-w-36 rounded-lg border border-slate-300 bg-white px-3 py-3 text-sm font-semibold text-slate-800 outline-none focus:border-amber-400"
+          >
+            <option value="All">All</option>
+            <option value="Confirmed">Confirmed</option>
+            <option value="CheckedIn">CheckedIn</option>
+            <option value="Pending">Pending</option>
+            <option value="Cancelled">Cancelled</option>
+          </select>
+
+          <button
+            onClick={clearFilters}
+            className="flex items-center justify-center gap-2 rounded-lg bg-amber-400 px-5 py-3 text-sm font-bold text-slate-950 transition hover:bg-amber-300 active:scale-95"
+          >
+            <RefreshCw size={16} />
+            Clear filters
+          </button>
         </div>
       </div>
 
+      {/* Table */}
       <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-slate-200 text-left text-sm dark:divide-slate-800">
-          <thead className="bg-slate-50 dark:bg-slate-950/40">
+        <table className="w-full min-w-[1100px] border-collapse text-left">
+          <thead className="bg-[#191c22] text-white">
             <tr>
-              <th className="px-5 py-3 font-semibold text-slate-600 dark:text-slate-300">Registration Number</th>
-              <th className="px-5 py-3 font-semibold text-slate-600 dark:text-slate-300">Participant Name</th>
-              <th className="px-5 py-3 font-semibold text-slate-600 dark:text-slate-300">Car Make/Model</th>
-              <th className="px-5 py-3 font-semibold text-slate-600 dark:text-slate-300">Plate Number</th>
-              <th className="px-5 py-3 font-semibold text-slate-600 dark:text-slate-300">Type</th>
-              <th className="px-5 py-3 font-semibold text-slate-600 dark:text-slate-300">Status</th>
-              <th className="px-5 py-3 font-semibold text-slate-600 dark:text-slate-300">Payment Status</th>
-              <th className="px-5 py-3 font-semibold text-slate-600 dark:text-slate-300">Fee</th>
+              {[
+                "Registration No.",
+                "Date & Time",
+                "Participant",
+                "Car Make & Model",
+                "Type",
+                "Status",
+                "Fee / Paid",
+                "Payment",
+              ].map((heading) => (
+                <th
+                  key={heading}
+                  className={`whitespace-nowrap px-4 py-4 text-xs font-bold uppercase tracking-wide ${
+                    heading === "Fee / Paid" ? "text-right" : ""
+                  }`}
+                >
+                  {heading}
+                </th>
+              ))}
             </tr>
           </thead>
 
-          <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
-            {loading ? (
-              <tr>
-                <td colSpan="8" className="px-5 py-10 text-center text-slate-500 dark:text-slate-400">
-                  Loading registrations...
+          <tbody className="divide-y divide-slate-200">
+            {currentData.map((item) => (
+              <tr
+                key={item.id}
+                className="transition-colors hover:bg-amber-50/60 even:bg-slate-50/60"
+              >
+                <td className="whitespace-nowrap px-4 py-4 text-sm font-bold text-slate-800">
+                  {item.id}
+                </td>
+
+                <td className="whitespace-nowrap px-4 py-4 text-sm text-slate-600">
+                  {item.date}
+                </td>
+
+                <td className="px-4 py-4">
+                  <p className="whitespace-nowrap text-sm font-bold text-slate-900">
+                    {item.name}
+                  </p>
+                  <p className="mt-1 text-xs text-slate-500">
+                    {item.contact}
+                  </p>
+                </td>
+
+                <td className="px-4 py-4">
+                  <p className="whitespace-nowrap text-sm font-bold text-slate-900">
+                    {item.car}
+                  </p>
+                  <p className="mt-1 text-xs text-slate-500">
+                    {item.plate}
+                  </p>
+                </td>
+
+                <td className="px-4 py-4">
+                  <Badge value={item.type} category="type" />
+                </td>
+
+                <td className="px-4 py-4">
+                  <Badge value={item.status} category="status" />
+                </td>
+
+                <td className="whitespace-nowrap px-4 py-4 text-right">
+                  <p className="text-sm font-bold text-slate-900">
+                    {peso(item.fee)}
+                  </p>
+                  <p className="mt-1 text-xs text-slate-500">
+                    Paid: {peso(item.paid)}
+                  </p>
+                </td>
+
+                <td className="px-4 py-4">
+                  <Badge
+                    value={getPaymentStatus(item)}
+                    category="payment"
+                  />
                 </td>
               </tr>
-            ) : data.items.length === 0 ? (
+            ))}
+
+            {currentData.length === 0 && (
               <tr>
-                <td colSpan="8" className="px-5 py-10 text-center text-slate-500 dark:text-slate-400">
-                  No records available.
+                <td
+                  colSpan={8}
+                  className="px-4 py-16 text-center text-sm text-slate-500"
+                >
+                  <Search size={30} className="mx-auto mb-3 text-slate-300" />
+                  No registrations found.
+                  <p className="mt-1 text-xs">
+                    Try changing your search or filters.
+                  </p>
                 </td>
               </tr>
-            ) : (
-              data.items.map((registration) => (
-                <tr key={registration.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                  <td className="px-5 py-3 font-medium text-slate-800 dark:text-slate-100">{registration.registrationNumber}</td>
-                  <td className="px-5 py-3 text-slate-700 dark:text-slate-200">
-                    <div className="font-medium">{registration.participantName}</div>
-                    <div className="text-xs text-slate-500 dark:text-slate-400">{registration.email}</div>
-                  </td>
-                  <td className="px-5 py-3 text-slate-700 dark:text-slate-200">{registration.carMakeModel}</td>
-                  <td className="px-5 py-3 text-slate-700 dark:text-slate-200">{registration.plateNumber}</td>
-                  <td className="px-5 py-3 text-slate-700 dark:text-slate-200">{registration.registrationType}</td>
-                  <td className="px-5 py-3">
-                    <StatusBadge status={registration.status} />
-                  </td>
-                  <td className="px-5 py-3">
-                    <PaymentBadge status={registration.paymentStatus} />
-                  </td>
-                  <td className="px-5 py-3 font-semibold text-slate-800 dark:text-slate-100">{formatPeso(registration.registrationFee)}</td>
-                </tr>
-              ))
             )}
           </tbody>
         </table>
       </div>
 
-      <div className="flex flex-col gap-3 border-t border-slate-200 px-5 py-4 sm:flex-row sm:items-center sm:justify-between dark:border-slate-800">
-        <p className="text-sm text-slate-500 dark:text-slate-400">
-          Page <span className="font-semibold text-slate-700 dark:text-slate-200">{data.page}</span> of <span className="font-semibold text-slate-700 dark:text-slate-200">{totalPages}</span>
-        </p>
+      {/* Pagination */}
+      <div className="flex flex-col justify-between gap-4 border-t border-slate-200 px-5 py-4 sm:flex-row sm:items-center">
+        <div className="flex flex-wrap items-center gap-4">
+          <p className="text-sm font-semibold text-slate-700">
+            Showing{" "}
+            {filteredData.length === 0 ? 0 : startIndex + 1}
+            {"–"}
+            {Math.min(startIndex + pageSize, filteredData.length)}
+            {" of "}
+            {filteredData.length}
+          </p>
 
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => setPage((current) => Math.max(1, current - 1))}
-            disabled={data.page <= 1 || loading}
-            className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
+          <select
+            value={pageSize}
+            onChange={(e) => {
+              setPageSize(Number(e.target.value));
+              setPage(1);
+            }}
+            className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 outline-none focus:border-amber-400"
           >
+            <option value={5}>5 rows</option>
+            <option value={10}>10 rows</option>
+            <option value={20}>20 rows</option>
+          </select>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            disabled={safePage <= 1 || totalPages === 0}
+            onClick={() => changePage(safePage - 1)}
+            className="flex items-center gap-1 rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            <ChevronLeft size={16} />
             Previous
           </button>
+
+          {Array.from({ length: totalPages }, (_, i) => i + 1)
+            .map((number) => (
+              <button
+                key={number}
+                onClick={() => changePage(number)}
+                className={`h-9 min-w-9 rounded-lg border px-3 text-sm font-bold transition ${
+                  safePage === number
+                    ? "border-amber-400 bg-amber-400 text-slate-950 shadow-sm"
+                    : "border-slate-300 bg-white text-slate-700 hover:bg-amber-50"
+                }`}
+              >
+                {number}
+              </button>
+            ))}
+
           <button
-            type="button"
-            onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
-            disabled={data.page >= totalPages || loading}
-            className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
+            disabled={safePage >= totalPages || totalPages === 0}
+            onClick={() => changePage(safePage + 1)}
+            className="flex items-center gap-1 rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40"
           >
             Next
+            <ChevronRight size={16} />
           </button>
         </div>
       </div>
-    </div>
+    </section>
   );
 }
