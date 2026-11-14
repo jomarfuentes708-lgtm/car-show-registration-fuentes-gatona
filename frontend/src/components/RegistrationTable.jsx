@@ -1,4 +1,3 @@
-
 import { useMemo, useState } from "react";
 import { Search, RefreshCw, ChevronLeft, ChevronRight } from "lucide-react";
 
@@ -47,17 +46,26 @@ export default function RegistrationTable({ data }) {
   const [pageSize, setPageSize] = useState(10);
 
   const filteredData = useMemo(() => {
-    return data.filter((item) => {
+    const items = Array.isArray(data) ? data : [];
+
+    return items.filter((item) => {
       const query = search.toLowerCase();
+      const name = String(item?.name ?? item?.participantName ?? "").toLowerCase();
+      const id = String(item?.id ?? item?.registrationNumber ?? "").toLowerCase();
+      const car = String(item?.car ?? item?.carMakeModel ?? "").toLowerCase();
+      const plate = String(item?.plate ?? item?.plateNumber ?? "").toLowerCase();
 
       const matchesSearch =
-        item.name.toLowerCase().includes(query) ||
-        item.id.toLowerCase().includes(query) ||
-        item.car.toLowerCase().includes(query) ||
-        item.plate.toLowerCase().includes(query);
+        name.includes(query) ||
+        id.includes(query) ||
+        car.includes(query) ||
+        plate.includes(query);
 
-      const matchesType = type === "All" || item.type === type;
-      const matchesStatus = status === "All" || item.status === status;
+      const typeValue = item?.type ?? item?.registrationType ?? "";
+      const statusValue = item?.status ?? "";
+
+      const matchesType = type === "All" || typeValue === type;
+      const matchesStatus = status === "All" || statusValue === status;
 
       return matchesSearch && matchesType && matchesStatus;
     });
@@ -74,8 +82,11 @@ export default function RegistrationTable({ data }) {
   );
 
   const getPaymentStatus = (item) => {
-    if (item.paid === 0) return "Unpaid";
-    if (item.paid < item.fee) return "Partial";
+    const fee = Number(item?.fee ?? item?.registrationFee ?? 0);
+    const paid = Number(item?.paid ?? item?.amountPaid ?? 0);
+
+    if (paid === 0) return "Unpaid";
+    if (paid < fee) return "Partial";
     return "Paid";
   };
 

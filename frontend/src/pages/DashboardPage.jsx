@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Menu,
   Bell,
@@ -11,15 +11,70 @@ import {
 import Sidebar from "../components/Sidebar";
 import KpiCards from "../components/KpiCards";
 import RegistrationTable from "../components/RegistrationTable";
-import { registrations } from "../data/registrations";
+import { getRegistrations, getSummary } from "../api/sample-data";
 
-export default function DashboardPage() {
-  const [activePage, setActivePage] = useState("Dashboard");
+const mapRegistrationToTableRow = (item) => ({
+  id: item.registrationNumber ?? item.id ?? "",
+  date: item.registrationDate
+    ? new Date(item.registrationDate).toLocaleString("en-PH", {
+        dateStyle: "medium",
+        timeStyle: "short",
+      })
+    : item.date ?? "",
+  name: item.participantName ?? item.name ?? "",
+  contact: item.contactNumber ?? item.contact ?? "",
+  car: item.carMakeModel ?? item.car ?? "",
+  plate: item.plateNumber ?? item.plate ?? "",
+  type: item.registrationType ?? item.type ?? "",
+  status: item.status ?? "",
+  fee: Number(item.registrationFee ?? item.fee ?? 0),
+  paid: Number(item.amountPaid ?? item.paid ?? 0),
+});
+
+export default function DashboardPage({ activePage = "Dashboard", onNavigate = () => {} }) {
+  const [localActivePage, setLocalActivePage] = useState(activePage);
   const [mobileMenu, setMobileMenu] = useState(false);
+  const [registrations, setRegistrations] = useState([]);
+  const [summary, setSummary] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        setLoading(true);
+
+        const regData = await getRegistrations();
+        const summaryData = await getSummary();
+        const list = Array.isArray(regData?.items)
+          ? regData.items
+          : Array.isArray(regData)
+            ? regData
+            : [];
+
+        setRegistrations(list.map(mapRegistrationToTableRow));
+        setSummary(summaryData);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchData();
+  }, []);
+
+  useEffect(() => {
+    setLocalActivePage(activePage);
+  }, [activePage]);
+
+  const handleNavigate = (page) => {
+    setLocalActivePage(page);
+    onNavigate?.(page);
+  };
 
   return (
     <div className="min-h-screen bg-[#f3f5f9] text-slate-900">
-      <Sidebar activePage={activePage} onNavigate={setActivePage} />
+      <Sidebar activePage={localActivePage} onNavigate={handleNavigate} />
 
       {mobileMenu && (
         <div className="fixed inset-0 z-50 lg:hidden">
@@ -39,10 +94,10 @@ export default function DashboardPage() {
             </button>
 
             <Sidebar
-              activePage={activePage}
+              activePage={localActivePage}
               mobile={true}
               onNavigate={(page) => {
-                setActivePage(page);
+                handleNavigate(page);
                 setMobileMenu(false);
               }}
             />
@@ -61,7 +116,7 @@ export default function DashboardPage() {
           </button>
 
           <div className="hidden text-sm font-semibold text-slate-500 lg:block">
-            AutoVista Events / {activePage}
+            AutoVista Events / {localActivePage}
           </div>
 
           <div className="ml-auto flex items-center gap-5">
@@ -118,22 +173,30 @@ export default function DashboardPage() {
             </div>
           </section>
 
-          <KpiCards />
-
-          <section className="space-y-4">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <div>
-                <h2 className="text-xl font-extrabold text-slate-900">Registration Management</h2>
-                <p className="mt-1 text-sm text-slate-500">Manage and monitor all event participants.</p>
-              </div>
-
-              <span className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-bold text-amber-800">
-                CAR SHOW 2027
-              </span>
+          {loading ? (
+            <div className="rounded-xl border border-slate-200 bg-white p-6 text-slate-600 shadow-sm">
+              Naglo-load ng data mula sa database...
             </div>
+          ) : (
+            <>
+              <KpiCards summary={summary} />
 
-            <RegistrationTable data={registrations} />
-          </section>
+              <section className="space-y-4">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div>
+                    <h2 className="text-xl font-extrabold text-slate-900">Registration Management</h2>
+                    <p className="mt-1 text-sm text-slate-500">Manage and monitor all event participants.</p>
+                  </div>
+
+                  <span className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-bold text-amber-800">
+                    CAR SHOW 2027
+                  </span>
+                </div>
+
+                <RegistrationTable data={registrations} />
+              </section>
+            </>
+          )}
 
           <footer className="flex flex-col justify-between gap-2 border-t border-slate-200 py-5 text-xs text-slate-500 sm:flex-row">
             <p>© 2027 AutoVista Events. All rights reserved.</p>
