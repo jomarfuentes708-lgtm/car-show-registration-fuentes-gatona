@@ -27,7 +27,7 @@ export const SAMPLE_REGISTRATIONS = [
 ];
 
 export async function getRegistrations({ participantName = "", type = "", status = "", page = 1, pageSize = 10 } = {}) {
-  await new Promise((r) => setTimeout(r, 300));
+await new Promise((r) => setTimeout(r, 4000));
   let filtered = [...SAMPLE_REGISTRATIONS];
 
   if (participantName.trim()) {
