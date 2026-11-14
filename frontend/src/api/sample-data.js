@@ -1,3 +1,5 @@
+const API_BASE_URL = "http://localhost:5205/api";
+
 export const SAMPLE_REGISTRATIONS = [
   { id: "1", registrationNumber: "CS27-0001", registrationDate: "2027-02-10T08:30:00Z", participantName: "Miguel Santos", contactNumber: "09172846103", email: "miguel.santos@email.com", address: "Sorsogon City", carMakeModel: "Toyota Supra MK5", plateNumber: "ABC 2741", registrationType: "Competitor", status: "CheckedIn", registrationFee: 5000.00, amountPaid: 5000.00, paymentStatus: "Paid" },
   { id: "2", registrationNumber: "CS27-0002", registrationDate: "2027-02-10T08:42:00Z", participantName: "Angela Reyes", contactNumber: "09184529104", email: "angela.reyes@email.com", address: "Legazpi City", carMakeModel: "Honda Civic Type R", plateNumber: "NCR 8821", registrationType: "Exhibitor", status: "Confirmed", registrationFee: 2500.00, amountPaid: 2500.00, paymentStatus: "Paid" },
@@ -27,43 +29,67 @@ export const SAMPLE_REGISTRATIONS = [
 ];
 
 export async function getRegistrations({ participantName = "", type = "", status = "", page = 1, pageSize = 10 } = {}) {
-await new Promise((r) => setTimeout(r, 4000));
-  let filtered = [...SAMPLE_REGISTRATIONS];
+  const params = new URLSearchParams();
 
-  if (participantName.trim()) {
-    const q = participantName.toLowerCase();
-    filtered = filtered.filter((item) => item.participantName.toLowerCase().includes(q));
-  }
-  if (type && type !== "All") {
-    filtered = filtered.filter((item) => item.registrationType === type);
-  }
-  if (status && status !== "All") {
-    filtered = filtered.filter((item) => item.status === status);
-  }
+  if (participantName.trim()) params.append("participantName", participantName.trim());
+  if (type && type !== "All") params.append("type", type);
+  if (status && status !== "All") params.append("status", status);
+  params.append("page", String(page));
+  params.append("pageSize", String(pageSize));
 
-  const totalCount = filtered.length;
-  const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
-  const safePage = Math.min(Math.max(1, page), totalPages);
-  const startIndex = (safePage - 1) * pageSize;
-  const items = filtered.slice(startIndex, startIndex + pageSize);
+  try {
+    const response = await fetch(`${API_BASE_URL}/registrations?${params.toString()}`);
+    if (!response.ok) throw new Error("Failed to fetch registrations");
+    return await response.json();
+  } catch (error) {
+    const filtered = [...SAMPLE_REGISTRATIONS];
+    let items = filtered;
 
-  return { items, page: safePage, pageSize, totalCount, totalPages };
+    if (participantName.trim()) {
+      const query = participantName.toLowerCase();
+      items = items.filter((item) => item.participantName.toLowerCase().includes(query));
+    }
+    if (type && type !== "All") {
+      items = items.filter((item) => item.registrationType === type);
+    }
+    if (status && status !== "All") {
+      items = items.filter((item) => item.status === status);
+    }
+
+    const totalCount = items.length;
+    const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
+    const safePage = Math.min(Math.max(1, page), totalPages);
+    const startIndex = (safePage - 1) * pageSize;
+
+    return {
+      items: items.slice(startIndex, startIndex + pageSize),
+      page: safePage,
+      pageSize,
+      totalCount,
+      totalPages,
+    };
+  }
 }
 
 export async function getSummary() {
-  await new Promise((r) => setTimeout(r, 200));
-  const active = SAMPLE_REGISTRATIONS.filter((r) => r.status !== "Cancelled");
-  const totalFees = active.reduce((sum, r) => sum + r.registrationFee, 0);
-  const totalPayments = active.reduce((sum, r) => sum + r.amountPaid, 0);
+  try {
+    const response = await fetch(`${API_BASE_URL}/registrations/summary`);
+    if (!response.ok) throw new Error("Failed to fetch summary stats");
+    return await response.json();
+  } catch (error) {
+    const active = SAMPLE_REGISTRATIONS.filter((r) => r.status !== "Cancelled");
+    const totalFees = active.reduce((sum, r) => sum + r.registrationFee, 0);
+    const totalPayments = active.reduce((sum, r) => sum + r.amountPaid, 0);
 
-  return {
-    totalRegistrations: SAMPLE_REGISTRATIONS.length,
-    confirmed: SAMPLE_REGISTRATIONS.filter((r) => r.status === "Confirmed").length,
-    checkedIn: SAMPLE_REGISTRATIONS.filter((r) => r.status === "CheckedIn").length,
-    pending: SAMPLE_REGISTRATIONS.filter((r) => r.status === "Pending").length,
-    cancelled: SAMPLE_REGISTRATIONS.filter((r) => r.status === "Cancelled").length,
-    totalFees,
-    totalPayments,
-    uncollectedPayments: totalFees - totalPayments,
-  };
+    return {
+      totalRegistrations: SAMPLE_REGISTRATIONS.length,
+      confirmed: SAMPLE_REGISTRATIONS.filter((r) => r.status === "Confirmed").length,
+      checkedIn: SAMPLE_REGISTRATIONS.filter((r) => r.status === "CheckedIn").length,
+      pending: SAMPLE_REGISTRATIONS.filter((r) => r.status === "Pending").length,
+      cancelled: SAMPLE_REGISTRATIONS.filter((r) => r.status === "Cancelled").length,
+      totalFees,
+      totalPayments,
+      uncollectedPayments: totalFees - totalPayments,
+    };
+  }
 }
