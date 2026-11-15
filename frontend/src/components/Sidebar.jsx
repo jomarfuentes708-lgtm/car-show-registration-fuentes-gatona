@@ -1,89 +1,112 @@
-import { CarFront } from "lucide-react";
-import {
-  LayoutDashboard,
-  Users,
-  CreditCard,
-  ChartNoAxesColumnIncreasing,
-  Settings,
-  Flag,
-  MapPin,
-} from "lucide-react";
+const sidebarBg = { backgroundImage: 'linear-gradient(180deg,#4e73df 10%,#224abe 100%)' };
 
-const menuItems = [
-  { name: "Dashboard", icon: LayoutDashboard },
-  { name: "Registrations", icon: Users },
-  { name: "Payments", icon: CreditCard },
-  { name: "Reports", icon: ChartNoAxesColumnIncreasing },
-  { name: "Settings", icon: Settings },
+const ICON = {
+  className: 'h-5 w-5 shrink-0',
+  fill: 'none',
+  viewBox: '0 0 24 24',
+  stroke: 'currentColor',
+  strokeWidth: 1.7,
+  strokeLinecap: 'round',
+  strokeLinejoin: 'round',
+};
+
+export const NAV_ITEMS = [
+  {
+    id: 'dashboard',
+    label: 'Dashboard',
+    icon: (
+      <svg {...ICON}>
+        <rect x="4" y="4" width="6.5" height="6.5" rx="1.5" />
+        <rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5" />
+        <rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5" />
+        <rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5" />
+      </svg>
+    ),
+  },
+  {
+    id: 'registrations',
+    label: 'Registrations',
+    icon: (
+      <svg {...ICON}>
+        <circle cx="9" cy="8" r="3.5" />
+        <path d="M2.5 20a6.5 6.5 0 0 1 13 0" />
+        <path d="M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14.2a6.5 6.5 0 0 1 3.5 5.8" />
+      </svg>
+    ),
+  },
+  {
+    id: 'payments',
+    label: 'Payments',
+    icon: (
+      <svg {...ICON}>
+        <rect x="3" y="5.5" width="18" height="13" rx="2.5" />
+        <path d="M3 10h18M7 15h3" />
+      </svg>
+    ),
+  },
+  {
+    id: 'reports',
+    label: 'Reports',
+    icon: (
+      <svg {...ICON}>
+        <path d="M6 20v-6M12 20V6M18 20v-10" />
+      </svg>
+    ),
+  },
+  {
+    id: 'settings',
+    label: 'Settings',
+    icon: (
+      <svg {...ICON}>
+        <circle cx="12" cy="12" r="3" />
+        <path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V21a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1.11-1.55 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.55-1H3a2 2 0 1 1 0-4h.09a1.7 1.7 0 0 0 1.55-1.11 1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.7 1.7 0 0 0 1.87.34h.01a1.7 1.7 0 0 0 1-1.55V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.55 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87v.01a1.7 1.7 0 0 0 1.55 1H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.55 1Z" />
+      </svg>
+    ),
+  },
 ];
 
-export default function Sidebar({ activePage = "Dashboard", onNavigate, mobile = false }) {
+export default function Sidebar({ active, onNavigate, open, onClose }) {
   return (
-    <aside
-      className={`fixed inset-y-0 left-0 z-40 flex flex-col bg-[#17191e] text-white shadow-2xl ${
-        mobile ? "w-72" : "hidden w-64 lg:flex"
-      }`}
-    >
-      {/* Brand */}
-      <div className="flex h-36 flex-col items-center justify-center border-b border-white/10">
-        <div className="relative mb-2">
-          <CarFront size={42} className="text-amber-400" />
-        </div>
-        <h1 className="text-2xl font-black tracking-tight">
-          AutoVista
-        </h1>
-        <span className="-mt-1 text-lg font-bold text-amber-400">
-          Events
-        </span>
-      </div>
+    <>
+      {open && (
+        <div className="fixed inset-0 z-30 bg-black/40 lg:hidden" onClick={onClose} aria-hidden="true" />
+      )}
 
-      {/* Navigation */}
-      <nav className="flex-1 space-y-2 px-3 py-6">
-        {menuItems.map((item) => {
-          const Icon = item.icon;
-          const active = activePage === item.name;
-
-          return (
-            <button
-              key={item.name}
-              onClick={() => onNavigate?.(item.name)}
-              className={`flex w-full items-center gap-4 rounded-lg px-4 py-3.5 text-left text-sm font-semibold transition-all ${
-                active
-                  ? "bg-amber-400 text-slate-950 shadow-lg shadow-amber-500/20"
-                  : "text-slate-300 hover:bg-white/10 hover:text-white"
-              }`}
-            >
-              <Icon size={21} />
-              {item.name}
-            </button>
-          );
-        })}
-      </nav>
-
-      {/* Event information */}
-      <div className="border-t border-white/10 p-5">
-        <div className="mb-5 rounded-xl border border-amber-400/30 bg-gradient-to-br from-amber-400/15 to-transparent p-4">
-          <Flag className="mb-3 text-amber-400" size={30} />
-          <h3 className="text-lg font-extrabold">
-            Car Show <span className="text-amber-400">2027</span>
-          </h3>
-          <p className="mt-1 text-xs italic text-slate-400">
-            Drive. Showcase. Inspire.
-          </p>
-          <div className="mt-4 h-1 w-full rounded-full bg-amber-400" />
+      <aside
+        style={sidebarBg}
+        className={`fixed inset-y-0 left-0 z-40 flex w-64 flex-col text-white transition-transform duration-200 lg:translate-x-0 ${
+          open ? 'translate-x-0' : '-translate-x-full'
+        }`}
+      >
+        <div className="border-b border-white/20 px-5 py-5">
+          <p className="text-base font-extrabold leading-tight">AutoVista Events</p>
+          <p className="text-xs text-white/80">Car Show 2027</p>
         </div>
 
-        <p className="text-xs font-semibold text-slate-300">
-          AutoVista Events
-        </p>
-        <p className="mt-1 flex items-center gap-1 text-xs text-slate-500">
-          <MapPin size={13} />
-          Sorsogon City Coliseum
-        </p>
-        <p className="mt-4 text-[10px] text-slate-600">
-          © 2027 AutoVista Events
-        </p>
-      </div>
-    </aside>
+        <nav className="flex-1 space-y-1 px-3 py-4" aria-label="Main navigation">
+          {NAV_ITEMS.map((item) => {
+            const isActive = active === item.id;
+            return (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => onNavigate(item.id)}
+                aria-current={isActive ? 'page' : undefined}
+                className={`flex w-full items-center gap-3 rounded px-4 py-3 text-left text-sm font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-white/80 ${
+                  isActive
+                    ? 'bg-white text-[#4e73df] shadow-sm'
+                    : 'text-white/80 hover:bg-white/10 hover:text-white'
+                }`}
+              >
+                {item.icon}
+                {item.label}
+              </button>
+            );
+          })}
+        </nav>
+
+        <p className="border-t border-white/20 px-5 py-4 text-xs text-white/60">Sorsogon City Coliseum</p>
+      </aside>
+    </>
   );
 }

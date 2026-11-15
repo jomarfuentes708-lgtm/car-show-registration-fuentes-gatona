@@ -4,8 +4,9 @@ const PAYMENT_STYLES = {
   Paid: 'bg-emerald-100 text-emerald-800 ring-1 ring-inset ring-emerald-200'
 };
 
-export default function PaymentBadge({ status = 'Unpaid', className = '' }) {
-  const badgeClass = PAYMENT_STYLES[status] || 'bg-slate-100 text-slate-700 ring-1 ring-inset ring-slate-200';
+export default function PaymentBadge({ status, paymentStatus, className = '' }) {
+  const badgeValue = paymentStatus ?? status ?? 'Unpaid';
+  const badgeClass = PAYMENT_STYLES[badgeValue] || 'bg-slate-100 text-slate-700 ring-1 ring-inset ring-slate-200';
 
   return (
     <span
@@ -15,7 +16,7 @@ export default function PaymentBadge({ status = 'Unpaid', className = '' }) {
         className
       ].join(' ')}
     >
-      {status}
+      {badgeValue}
     </span>
   );
 }
