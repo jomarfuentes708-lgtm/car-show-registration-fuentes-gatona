@@ -1,209 +1,280 @@
-import { useEffect, useState } from "react";
-import {
-  Menu,
-  Bell,
-  UserCircle,
-  MapPin,
-  CarFront,
-  X,
-} from "lucide-react";
+import { useEffect, useState } from 'react';
+import KpiCards from '../components/KpiCards';
+import NewRegistrationModal from '../components/NewRegistrationModal';
+import RegistrationTable from '../components/RegistrationTable';
 
-import Sidebar from "../components/Sidebar";
-import KpiCards from "../components/KpiCards";
-import RegistrationTable from "../components/RegistrationTable";
-import { getRegistrations, getSummary } from "../api/sample-data";
+const API_URL = (import.meta.env.VITE_API_URL || 'http://localhost:5205').replace(/\/$/, '');
+const TYPES = ['All', 'Exhibitor', 'Competitor', 'VIP'];
+const STATUSES = ['All', 'Pending', 'Confirmed', 'CheckedIn', 'Cancelled'];
+const PAGE_SIZES = [5, 10, 20];
 
-const mapRegistrationToTableRow = (item) => ({
-  id: item.registrationNumber ?? item.id ?? "",
-  date: item.registrationDate
-    ? new Date(item.registrationDate).toLocaleString("en-PH", {
-        dateStyle: "medium",
-        timeStyle: "short",
-      })
-    : item.date ?? "",
-  name: item.participantName ?? item.name ?? "",
-  contact: item.contactNumber ?? item.contact ?? "",
-  car: item.carMakeModel ?? item.car ?? "",
-  plate: item.plateNumber ?? item.plate ?? "",
-  type: item.registrationType ?? item.type ?? "",
-  status: item.status ?? "",
-  fee: Number(item.registrationFee ?? item.fee ?? 0),
-  paid: Number(item.amountPaid ?? item.paid ?? 0),
-});
+const fieldClass =
+  'w-full rounded border border-slate-300 bg-white px-3 py-2 text-sm text-[#5a5c69] focus:border-[#4e73df] focus:outline-none focus:ring-2 focus:ring-[#4e73df]/30';
 
-export default function DashboardPage({ activePage = "Dashboard", onNavigate = () => {} }) {
-  const [localActivePage, setLocalActivePage] = useState(activePage);
-  const [mobileMenu, setMobileMenu] = useState(false);
-  const [registrations, setRegistrations] = useState([]);
+function pageWindow(current, total) {
+  const size = 5;
+  let start = Math.max(1, current - 2);
+  const end = Math.min(total, start + size - 1);
+  start = Math.max(1, end - size + 1);
+  return Array.from({ length: end - start + 1 }, (_, i) => start + i);
+}
+
+async function fetchJson(url, options = {}) {
+  const response = await fetch(url, options);
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}`);
+  }
+  return response.json();
+}
+
+export default function DashboardPage({ showKpis = true }) {
   const [summary, setSummary] = useState(null);
+  const [summaryLoading, setSummaryLoading] = useState(true);
+
+  const [searchInput, setSearchInput] = useState('');
+  const [search, setSearch] = useState('');
+  const [type, setType] = useState('All');
+  const [status, setStatus] = useState('All');
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
+  const [data, setData] = useState({ items: [], page: 1, pageSize: 10, totalCount: 0, totalPages: 0 });
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
+  const [modalOpen, setModalOpen] = useState(false);
 
+  // Debounce the name search (~400ms) and go back to page 1.
   useEffect(() => {
-    async function fetchData() {
-      try {
-        setLoading(true);
+    const t = setTimeout(() => {
+      setSearch(searchInput.trim());
+      setPage(1);
+    }, 400);
+    return () => clearTimeout(t);
+  }, [searchInput]);
 
-        const regData = await getRegistrations();
-        const summaryData = await getSummary();
-        const list = Array.isArray(regData?.items)
-          ? regData.items
-          : Array.isArray(regData)
-            ? regData
-            : [];
-
-        setRegistrations(list.map(mapRegistrationToTableRow));
-        setSummary(summaryData);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchData();
-  }, []);
-
+  // KPI summary
   useEffect(() => {
-    setLocalActivePage(activePage);
-  }, [activePage]);
+    const controller = new AbortController();
+    setSummaryLoading(true);
 
-  const handleNavigate = (page) => {
-    setLocalActivePage(page);
-    onNavigate?.(page);
+    fetchJson(`${API_URL}/api/registrations/summary`, { signal: controller.signal })
+      .then((json) => {
+        setSummary({
+          totalRegistrations: Number(json.totalRegistrations ?? json.TotalRegistrations ?? 0),
+          totalPayments: Number(json.totalPayments ?? json.TotalPayments ?? 0),
+          uncollectedPayments: Number(json.uncollectedPayments ?? json.UncollectedPayments ?? 0),
+          confirmed: Number(json.confirmed ?? json.Confirmed ?? 0),
+          checkedIn: Number(json.checkedIn ?? json.CheckedIn ?? 0),
+        });
+      })
+      .catch((err) => {
+        if (err.name !== 'AbortError') setSummary(null);
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setSummaryLoading(false);
+      });
+
+    return () => controller.abort();
+  }, [reloadKey]);
+
+  // Registrations list
+  useEffect(() => {
+    const controller = new AbortController();
+    const params = new URLSearchParams();
+    const trimmedSearch = search.trim();
+
+    if (trimmedSearch) params.set('participantName', trimmedSearch);
+    if (type !== 'All') params.set('type', type);
+    if (status !== 'All') params.set('status', status);
+    params.set('page', String(page));
+    params.set('pageSize', String(pageSize));
+
+    setLoading(true);
+    setError(false);
+
+    fetchJson(`${API_URL}/api/registrations?${params.toString()}`, { signal: controller.signal })
+      .then((json) => {
+        setData({
+          items: Array.isArray(json.items) ? json.items : [],
+          page: Number(json.page) || 1,
+          pageSize: Number(json.pageSize) || pageSize,
+          totalCount: Number(json.totalCount) || 0,
+          totalPages: Number(json.totalPages) || 0,
+        });
+      })
+      .catch((err) => {
+        if (err.name === 'AbortError') return;
+        setError(true);
+        setData({ items: [], page: 1, pageSize, totalCount: 0, totalPages: 0 });
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setLoading(false);
+      });
+
+    return () => controller.abort();
+  }, [search, type, status, page, pageSize, reloadKey]);
+
+  const clearFilters = () => {
+    setSearchInput('');
+    setSearch('');
+    setType('All');
+    setStatus('All');
+    setPage(1);
   };
 
+  const retry = () => setReloadKey((k) => k + 1);
+  const refreshAll = () => setReloadKey((k) => k + 1);
+
+  const { totalCount, totalPages } = data;
+  const from = totalCount === 0 ? 0 : (page - 1) * pageSize + 1;
+  const to = Math.min(page * pageSize, totalCount);
+  const prevDisabled = loading || page <= 1;
+  const nextDisabled = loading || page >= totalPages || totalPages === 0;
+
+  const pageBtn =
+    'min-w-[2.25rem] rounded border px-3 py-1.5 text-sm font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[#4e73df]';
+
   return (
-    <div className="min-h-screen bg-[#f3f5f9] text-slate-900">
-      <Sidebar activePage={localActivePage} onNavigate={handleNavigate} />
+    <div className="space-y-6">
+      <NewRegistrationModal isOpen={modalOpen} onClose={() => setModalOpen(false)} onCreated={refreshAll} />
 
-      {mobileMenu && (
-        <div className="fixed inset-0 z-50 lg:hidden">
+      {showKpis && <KpiCards summary={summary} loading={summaryLoading} />}
+
+      <section className="rounded bg-white shadow-[0_.15rem_1.75rem_0_rgba(58,59,69,.15)]">
+        <header className="flex items-center justify-between gap-3 border-b border-slate-200 px-5 py-4">
+          <h2 className="text-base font-bold text-[#4e73df]">Registrations</h2>
           <button
-            className="absolute inset-0 bg-black/60"
-            onClick={() => setMobileMenu(false)}
-            aria-label="Close navigation"
-          />
-
-          <div className="relative h-full w-72">
-            <button
-              onClick={() => setMobileMenu(false)}
-              className="absolute right-3 top-3 z-50 rounded-lg bg-white/10 p-2 text-white"
-              aria-label="Close menu"
-            >
-              <X size={22} />
-            </button>
-
-            <Sidebar
-              activePage={localActivePage}
-              mobile={true}
-              onNavigate={(page) => {
-                handleNavigate(page);
-                setMobileMenu(false);
-              }}
-            />
-          </div>
-        </div>
-      )}
-
-      <main className="min-h-screen lg:ml-64">
-        <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-slate-200 bg-white/95 px-5 shadow-sm backdrop-blur md:px-8">
-          <button
-            onClick={() => setMobileMenu(true)}
-            className="rounded-lg p-2 text-slate-700 hover:bg-slate-100 lg:hidden"
-            aria-label="Open navigation"
+            type="button"
+            onClick={() => setModalOpen(true)}
+            className="rounded bg-[#4e73df] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-[#2e59d9] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#4e73df]"
           >
-            <Menu size={24} />
+            + New Registration
           </button>
-
-          <div className="hidden text-sm font-semibold text-slate-500 lg:block">
-            AutoVista Events / {localActivePage}
-          </div>
-
-          <div className="ml-auto flex items-center gap-5">
-            <button
-              className="relative rounded-full p-2 text-slate-600 hover:bg-slate-100"
-              aria-label="Notifications"
-            >
-              <Bell size={21} />
-              <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-red-500 ring-2 ring-white" />
-            </button>
-
-            <div className="flex items-center gap-2">
-              <UserCircle size={31} className="text-slate-700" />
-              <div className="hidden sm:block">
-                <p className="text-sm font-bold text-slate-800">Admin</p>
-                <p className="text-[11px] text-slate-500">Event Administrator</p>
-              </div>
-            </div>
-          </div>
         </header>
 
-        <div className="space-y-6 p-4 md:p-7">
-          <section className="relative isolate min-h-[180px] overflow-hidden rounded-2xl bg-gradient-to-r from-[#111318] via-[#24272c] to-[#6a4a0c] shadow-xl md:min-h-[190px]">
-            <div className="absolute inset-0 -z-10 opacity-20">
-              <div className="absolute inset-0 bg-[linear-gradient(120deg,transparent_30%,#fbbf24_100%)]" />
-              <div className="absolute right-0 top-0 h-full w-1/2 bg-[repeating-linear-gradient(135deg,transparent_0px,transparent_8px,#ffffff15_9px,#ffffff15_10px)]" />
-            </div>
-
-            <div className="absolute -right-8 bottom-[-35px] text-amber-300/15 md:right-12">
-              <CarFront size={240} strokeWidth={1} className="md:h-[280px] md:w-[280px]" />
-            </div>
-
-            <div className="absolute right-0 top-0 h-full w-2 bg-amber-400" />
-
-            <div className="relative z-10 flex min-h-[180px] items-center px-6 py-7 md:px-10">
-              <div>
-                <div className="mb-3 flex items-center gap-2">
-                  <span className="h-1 w-10 rounded-full bg-amber-400" />
-                  <span className="text-xs font-bold uppercase tracking-[0.25em] text-amber-400">
-                    AutoVista Events
-                  </span>
-                </div>
-
-                <h1 className="max-w-3xl text-2xl font-black leading-tight text-white md:text-4xl">
-                  Car Show{" "}
-                  <span className="text-amber-400">2027</span> — Registration Dashboard
-                </h1>
-
-                <p className="mt-3 flex items-center gap-2 text-sm font-medium text-slate-300 md:text-base">
-                  <MapPin size={18} className="text-amber-400" />
-                  AutoVista Events • Sorsogon City Coliseum
-                </p>
-              </div>
-            </div>
-          </section>
-
-          {loading ? (
-            <div className="rounded-xl border border-slate-200 bg-white p-6 text-slate-600 shadow-sm">
-              Naglo-load ng data mula sa database...
-            </div>
-          ) : (
-            <>
-              <KpiCards summary={summary} />
-
-              <section className="space-y-4">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div>
-                    <h2 className="text-xl font-extrabold text-slate-900">Registration Management</h2>
-                    <p className="mt-1 text-sm text-slate-500">Manage and monitor all event participants.</p>
-                  </div>
-
-                  <span className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-bold text-amber-800">
-                    CAR SHOW 2027
-                  </span>
-                </div>
-
-                <RegistrationTable data={registrations} />
-              </section>
-            </>
-          )}
-
-          <footer className="flex flex-col justify-between gap-2 border-t border-slate-200 py-5 text-xs text-slate-500 sm:flex-row">
-            <p>© 2027 AutoVista Events. All rights reserved.</p>
-            <p>Car Show Registration Management System</p>
-          </footer>
+        {/* Filters */}
+        <div className="grid grid-cols-1 gap-3 border-b border-slate-200 bg-[#f8f9fc] px-5 py-4 md:grid-cols-[1fr_12rem_12rem_auto]">
+          <input
+            type="search"
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            placeholder="Search participant name..."
+            aria-label="Search participant name"
+            className={fieldClass}
+          />
+          <select
+            value={type}
+            onChange={(e) => {
+              setType(e.target.value);
+              setPage(1);
+            }}
+            aria-label="Registration type"
+            className={fieldClass}
+          >
+            {TYPES.map((t) => (
+              <option key={t} value={t}>
+                {t === 'All' ? 'All types' : t}
+              </option>
+            ))}
+          </select>
+          <select
+            value={status}
+            onChange={(e) => {
+              setStatus(e.target.value);
+              setPage(1);
+            }}
+            aria-label="Status"
+            className={fieldClass}
+          >
+            {STATUSES.map((s) => (
+              <option key={s} value={s}>
+                {s === 'All' ? 'All statuses' : s === 'CheckedIn' ? 'Checked In' : s}
+              </option>
+            ))}
+          </select>
+          <button
+            type="button"
+            onClick={clearFilters}
+            className="rounded border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-[#5a5c69] transition hover:bg-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#4e73df]"
+          >
+            Clear Filters
+          </button>
         </div>
-      </main>
+
+        <RegistrationTable
+          items={data.items ?? []}
+          loading={loading}
+          error={error}
+          pageSize={pageSize}
+          onRetry={retry}
+          onClearFilters={clearFilters}
+        />
+
+        {/* Footer */}
+        {!error && (
+          <footer className="flex flex-col gap-3 border-t border-slate-200 px-5 py-4 text-sm text-[#858796] lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex flex-wrap items-center gap-4">
+              <span>
+                Showing {from}–{to} of {totalCount.toLocaleString('en-US')}
+              </span>
+              <label className="flex items-center gap-2">
+                <span>Rows per page</span>
+                <select
+                  value={pageSize}
+                  onChange={(e) => {
+                    setPageSize(Number(e.target.value));
+                    setPage(1);
+                  }}
+                  className="rounded border border-slate-300 bg-white px-2 py-1 text-sm text-[#5a5c69] focus:border-[#4e73df] focus:outline-none"
+                >
+                  {PAGE_SIZES.map((n) => (
+                    <option key={n} value={n}>
+                      {n}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+
+            <nav className="flex flex-wrap items-center gap-1" aria-label="Pagination">
+              <button
+                type="button"
+                disabled={prevDisabled}
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                className={`${pageBtn} border-slate-300 bg-white text-[#5a5c69] hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-white`}
+              >
+                Previous
+              </button>
+              {totalPages > 0 &&
+                pageWindow(page, totalPages).map((n) => (
+                  <button
+                    key={n}
+                    type="button"
+                    disabled={loading}
+                    onClick={() => setPage(n)}
+                    aria-current={n === page ? 'page' : undefined}
+                    className={`${pageBtn} disabled:cursor-not-allowed ${
+                      n === page
+                        ? 'border-[#4e73df] bg-[#4e73df] text-white'
+                        : 'border-slate-300 bg-white text-[#4e73df] hover:bg-slate-100'
+                    }`}
+                  >
+                    {n}
+                  </button>
+                ))}
+              <button
+                type="button"
+                disabled={nextDisabled}
+                onClick={() => setPage((p) => p + 1)}
+                className={`${pageBtn} border-slate-300 bg-white text-[#5a5c69] hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-white`}
+              >
+                Next
+              </button>
+            </nav>
+          </footer>
+        )}
+      </section>
     </div>
   );
 }
