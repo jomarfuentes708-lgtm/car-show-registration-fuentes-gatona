@@ -17,12 +17,12 @@ The backend provides structured API endpoints, business logic, and data handling
 
 ```text
 car-show-registration-Fuentes-Gatona/
-├── Backend/                    # C# Vertical Slice API backend
+├── Backend/              # C# Vertical Slice API backend
+├── frontend/             # React + Vite frontend dashboard
 ├── docs/
-│   └── screenshots/            # Project screenshots and supporting visuals
-├── .gitignore                 # Ignore generated and local files
-├── README.md                  # Project documentation
-└── .
+│   └── screenshots/      # Project screenshots and supporting visuals
+├── .gitignore            # Ignore generated and local files
+└── README.md             # Project documentation
 ```
 
 ## Team Members and Roles
@@ -35,7 +35,7 @@ car-show-registration-Fuentes-Gatona/
 ### Backend
 - C#
 - .NET 10
-- ASP.NET Core
+- ASP.NET Corev
 - Vertical Slice Architecture
 - EF Core / Data Access Layer
 
