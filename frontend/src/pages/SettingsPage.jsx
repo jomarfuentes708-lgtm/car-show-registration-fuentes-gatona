@@ -6,7 +6,7 @@ const EVENT_CONFIG = [
   { label: 'Venue', value: 'Sorsogon City Coliseum' },
   { label: 'Exhibitor Fee', value: '₱1,500' },
   { label: 'Competitor Fee', value: '₱2,500' },
-  { label: 'VIP Fee', value: '₱3,500' },
+  { label: 'VIP Fee', value: '₱5,000' },
 ];
 
 async function testApiConnection() {
