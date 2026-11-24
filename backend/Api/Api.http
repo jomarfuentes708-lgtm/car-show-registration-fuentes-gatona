@@ -1,6 +1,28 @@
 @Api_HostAddress = http://localhost:5205
 
-GET {{Api_HostAddress}}/api/students/
+### GET all registrations (paged)
+GET {{Api_HostAddress}}/api/registrations?page=1&pageSize=10
 Accept: application/json
 
-###
+### GET filter by type
+GET {{Api_HostAddress}}/api/registrations?type=VIP&page=1&pageSize=10
+Accept: application/json
+
+### GET registration summary (KPI)
+GET {{Api_HostAddress}}/api/registrations/summary
+Accept: application/json
+
+### POST duplicate plate number (409 Conflict)
+POST {{Api_HostAddress}}/api/registrations
+Content-Type: application/json
+
+{
+  "participantName": "Pedro Reyes",
+  "contactNumber": "09181234567",
+  "email": "pedro.reyes@example.com",
+  "address": "789 Quezon Ave., Sorsogon City",
+  "carMakeModel": "Nissan GT-R R35",
+  "plateNumber": "TST 1001",
+  "registrationType": "VIP",
+  "amountPaid": 3500
+}
