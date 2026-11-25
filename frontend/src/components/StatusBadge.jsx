@@ -1,17 +1,17 @@
 const STYLES = {
-  Pending: 'bg-amber-100 text-amber-800 ring-amber-200',
-  Confirmed: 'bg-cyan-100 text-cyan-800 ring-cyan-200',
-  CheckedIn: 'bg-emerald-100 text-emerald-800 ring-emerald-200',
-  Cancelled: 'bg-slate-200 text-slate-700 ring-slate-300',
+  Pending: 'border-amber-200 bg-amber-50 text-amber-700',
+  Confirmed: 'border-sky-200 bg-sky-50 text-sky-700',
+  CheckedIn: 'border-emerald-200 bg-emerald-50 text-emerald-700',
+  Cancelled: 'border-slate-200 bg-slate-100 text-slate-600',
 };
 
-const LABELS = { CheckedIn: 'Checked In' };
+const LABELS = { CheckedIn: 'Checked in' };
 
 export default function StatusBadge({ status }) {
-  const style = STYLES[status] ?? 'bg-slate-100 text-slate-700 ring-slate-200';
+  const style = STYLES[status] ?? 'border-slate-200 bg-slate-50 text-slate-700';
   return (
     <span
-      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold ring-1 ring-inset ${style}`}
+      className={`inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-medium ${style}`}
     >
       {LABELS[status] ?? status}
     </span>

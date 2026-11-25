@@ -1,20 +1,16 @@
 const PAYMENT_STYLES = {
-  Unpaid: 'bg-rose-100 text-rose-800 ring-1 ring-inset ring-rose-200',
-  Partial: 'bg-amber-100 text-amber-800 ring-1 ring-inset ring-amber-200',
-  Paid: 'bg-emerald-100 text-emerald-800 ring-1 ring-inset ring-emerald-200'
+  Unpaid: 'border-slate-300 bg-slate-100 text-slate-700',
+  Partial: 'border-amber-200 bg-amber-50 text-amber-700',
+  Paid: 'border-slate-300 bg-slate-100 text-slate-700',
 };
 
 export default function PaymentBadge({ status, paymentStatus, className = '' }) {
   const badgeValue = paymentStatus ?? status ?? 'Unpaid';
-  const badgeClass = PAYMENT_STYLES[badgeValue] || 'bg-slate-100 text-slate-700 ring-1 ring-inset ring-slate-200';
+  const badgeClass = PAYMENT_STYLES[badgeValue] || 'border-slate-200 bg-slate-50 text-slate-700';
 
   return (
     <span
-      className={[
-        'inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold tracking-wide',
-        badgeClass,
-        className
-      ].join(' ')}
+      className={`inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-medium ${badgeClass} ${className}`}
     >
       {badgeValue}
     </span>

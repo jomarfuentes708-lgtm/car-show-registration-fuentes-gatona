@@ -1,5 +1,3 @@
-const sidebarBg = { backgroundImage: 'linear-gradient(180deg,#4e73df 10%,#224abe 100%)' };
-
 const ICON = {
   className: 'h-5 w-5 shrink-0',
   fill: 'none',
@@ -69,18 +67,18 @@ export default function Sidebar({ active, onNavigate, open, onClose }) {
   return (
     <>
       {open && (
-        <div className="fixed inset-0 z-30 bg-black/40 lg:hidden" onClick={onClose} aria-hidden="true" />
+        <div className="fixed inset-0 z-30 bg-slate-950/30 lg:hidden" onClick={onClose} aria-hidden="true" />
       )}
-
       <aside
-        style={sidebarBg}
-        className={`fixed inset-y-0 left-0 z-40 flex w-64 flex-col text-white transition-transform duration-200 lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-40 flex w-60 flex-col border-r border-slate-200 bg-white transition-transform duration-200 lg:translate-x-0 ${
           open ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        <div className="border-b border-white/20 px-5 py-5">
-          <p className="text-base font-extrabold leading-tight">AutoVista Events</p>
-          <p className="text-xs text-white/80">Car Show 2027</p>
+        <div className="flex h-16 items-center border-b border-slate-200 px-5">
+          <div>
+            <p className="text-sm font-bold text-slate-900">AutoVista Events</p>
+            <p className="mt-0.5 text-xs text-slate-500">Car Show 2027</p>
+          </div>
         </div>
 
         <nav className="flex-1 space-y-1 px-3 py-4" aria-label="Main navigation">
@@ -92,10 +90,10 @@ export default function Sidebar({ active, onNavigate, open, onClose }) {
                 type="button"
                 onClick={() => onNavigate(item.id)}
                 aria-current={isActive ? 'page' : undefined}
-                className={`flex w-full items-center gap-3 rounded px-4 py-3 text-left text-sm font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-white/80 ${
+                className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 ${
                   isActive
-                    ? 'bg-white text-[#4e73df] shadow-sm'
-                    : 'text-white/80 hover:bg-white/10 hover:text-white'
+                    ? 'bg-slate-100 text-slate-950'
+                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
                 }`}
               >
                 {item.icon}
@@ -105,7 +103,7 @@ export default function Sidebar({ active, onNavigate, open, onClose }) {
           })}
         </nav>
 
-        <p className="border-t border-white/20 px-5 py-4 text-xs text-white/60">Sorsogon City Coliseum</p>
+        <p className="border-t border-slate-200 px-5 py-4 text-xs text-slate-400">Sorsogon City Coliseum</p>
       </aside>
     </>
   );

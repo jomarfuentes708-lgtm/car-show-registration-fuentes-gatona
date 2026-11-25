@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 const API_URL = (import.meta.env.VITE_API_URL || 'http://localhost:5205').replace(/\/$/, '');
 
 const fieldClass =
-  'w-full rounded border border-slate-300 bg-white px-3 py-2.5 text-sm text-[#5a5c69] shadow-sm transition focus:border-[#4e73df] focus:outline-none focus:ring-2 focus:ring-[#4e73df]/30';
+  'w-full rounded-md border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 shadow-sm transition placeholder:text-slate-400 focus:border-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-200';
 
 const initialForm = {
   participantName: '',
@@ -140,14 +140,12 @@ export default function NewRegistrationModal({ isOpen, onClose, onCreated }) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-[#111827]/40 px-4 py-6"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/35 px-4 py-6"
       onClick={handleBackdropClick}
     >
       <div className="w-full max-w-2xl overflow-hidden rounded-xl bg-white shadow-[0_15px_40px_rgba(17,24,39,0.2)]">
-        <div className="flex items-center justify-between border-b border-slate-200 bg-[#f8f9fc] px-6 py-4">
-          <div>
-            <h3 className="text-xl font-bold text-[#4e73df]">{formTitle}</h3>
-          </div>
+        <div className="flex items-center justify-between border-b border-[#e2e8f0] bg-[#f8fafc] px-6 py-4">
+          <div><h3 className="text-lg font-semibold text-slate-900">{formTitle}</h3></div>
           <button
             type="button"
             onClick={onClose}
@@ -231,7 +229,7 @@ export default function NewRegistrationModal({ isOpen, onClose, onCreated }) {
             <button
               type="submit"
               disabled={submitting}
-              className="rounded bg-[#4e73df] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-[#2e59d9] disabled:cursor-not-allowed disabled:opacity-60 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#4e73df]"
+              className="rounded-md bg-[#1e293b] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2"
             >
               {submitting ? 'Saving...' : 'Save Registration'}
             </button>
