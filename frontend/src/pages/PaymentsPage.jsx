@@ -88,17 +88,17 @@ export default function PaymentsPage() {
   const stats = useMemo(() => summarizeStats(summary), [summary]);
 
   const cards = [
-    { label: 'Total Fees', value: money(stats.totalFees), tone: 'border-l-[#4e73df] text-[#4e73df]' },
-    { label: 'Total Collected', value: money(stats.totalPayments), tone: 'border-l-[#1cc88a] text-[#1cc88a]' },
-    { label: 'Uncollected', value: money(stats.uncollected), tone: 'border-l-[#e74a3b] text-[#e74a3b]' },
-    { label: 'Collection Rate', value: formatPercent(stats.collectionRate), tone: 'border-l-[#36b9cc] text-[#36b9cc]' },
+    { label: 'Total Fees', value: money(stats.totalFees), tone: 'border-l-slate-700 text-slate-700' },
+    { label: 'Total Collected', value: money(stats.totalPayments), tone: 'border-l-slate-500 text-slate-700' },
+    { label: 'Uncollected', value: money(stats.uncollected), tone: 'border-l-slate-400 text-slate-600' },
+    { label: 'Collection Rate', value: formatPercent(stats.collectionRate), tone: 'border-l-slate-300 text-slate-600' },
   ];
 
   return (
     <div className="space-y-6">
-      <section className="rounded bg-white shadow-[0_.15rem_1.75rem_0_rgba(58,59,69,.15)]">
-        <header className="border-b border-slate-200 px-5 py-4">
-          <h2 className="text-base font-bold text-[#4e73df]">Payments</h2>
+      <section className="overflow-hidden rounded-lg border border-[#e2e8f0] bg-white">
+        <header className="border-b border-[#e2e8f0] px-5 py-4">
+          <h2 className="text-base font-semibold text-slate-900">Payments</h2>
         </header>
 
         {error ? (
@@ -107,12 +107,12 @@ export default function PaymentsPage() {
           <>
             <div className="grid grid-cols-1 gap-4 p-5 sm:grid-cols-2 xl:grid-cols-4">
               {cards.map(({ label, value, tone }) => (
-                <div key={label} className={`rounded border-l-4 bg-white px-5 py-4 shadow-[0_.15rem_1.75rem_0_rgba(58,59,69,.15)] ${tone}`}>
-                  <p className="text-xs font-bold uppercase tracking-wide text-[#858796]">{label}</p>
+                <div key={label} className={`rounded-lg border border-[#e2e8f0] bg-white px-5 py-4 border-l-4 ${tone}`}>
+                  <p className="text-xs font-medium uppercase tracking-wide text-slate-500">{label}</p>
                   {loadingSummary ? (
                     <div className="mt-2 h-7 w-28 animate-pulse rounded bg-slate-200" />
                   ) : (
-                    <p className="mt-2 text-2xl font-bold text-[#5a5c69]">{value}</p>
+                    <p className="mt-2 text-2xl font-semibold text-slate-900">{value}</p>
                   )}
                 </div>
               ))}
@@ -120,11 +120,11 @@ export default function PaymentsPage() {
 
             <div className="border-t border-slate-200 px-5 py-4">
               <div className="mb-4 flex items-center justify-between gap-3">
-                <div className="text-sm font-bold text-[#5a5c69]">Payment Breakdown</div>
+                <div className="text-sm font-semibold text-slate-900">Payment Breakdown</div>
                 <select
                   value={paymentFilter}
                   onChange={(e) => setPaymentFilter(e.target.value)}
-                  className="rounded border border-slate-300 bg-white px-3 py-2 text-sm text-[#5a5c69] focus:border-[#4e73df] focus:outline-none"
+                  className="rounded-md border border-[#e2e8f0] bg-white px-3 py-2 text-sm text-slate-700 focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-200"
                 >
                   {PAYMENT_FILTERS.map((option) => (
                     <option key={option} value={option}>
@@ -173,12 +173,12 @@ export default function PaymentsPage() {
                               <td className="px-4 py-3 text-right">{money(Math.max(balance, 0))}</td>
                               <td className="px-4 py-3">
                                 <span
-                                  className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-bold ring-1 ring-inset ${
+                                  className={`inline-flex rounded-md border px-2 py-0.5 text-xs font-medium ${
                                     item.paymentStatus === 'Paid'
-                                      ? 'bg-emerald-100 text-emerald-800 ring-emerald-200'
+                                      ? 'border-slate-300 bg-slate-100 text-slate-700'
                                       : item.paymentStatus === 'Partial'
-                                        ? 'bg-amber-100 text-amber-800 ring-amber-200'
-                                        : 'bg-rose-100 text-rose-800 ring-rose-200'
+                                        ? 'border-amber-200 bg-amber-50 text-amber-700'
+                                        : 'border-slate-300 bg-slate-100 text-slate-700'
                                   }`}
                                 >
                                   {item.paymentStatus}

@@ -42,34 +42,34 @@ export default function SettingsPage() {
 
   return (
     <div className="space-y-6">
-      <section className="rounded bg-white shadow-[0_.15rem_1.75rem_0_rgba(58,59,69,.15)]">
-        <header className="border-b border-slate-200 px-5 py-4">
-          <h2 className="text-base font-bold text-[#4e73df]">Settings</h2>
+      <section className="overflow-hidden rounded-lg border border-[#e2e8f0] bg-white">
+        <header className="border-b border-[#e2e8f0] px-5 py-4">
+          <h2 className="text-base font-semibold text-slate-900">Settings</h2>
         </header>
 
         <div className="grid grid-cols-1 gap-5 p-5 lg:grid-cols-2">
-          <div className="rounded border border-slate-200 bg-[#f8f9fc] p-5">
-            <h3 className="mb-4 text-sm font-bold uppercase tracking-wide text-[#5a5c69]">Event Configuration</h3>
+          <div className="rounded-lg border border-[#e2e8f0] bg-[#f8fafc] p-5">
+            <h3 className="mb-4 text-xs font-semibold uppercase tracking-wide text-slate-500">Event Configuration</h3>
             <div className="space-y-3">
               {EVENT_CONFIG.map(({ label, value }) => (
                 <div key={label} className="flex items-center justify-between gap-3 border-b border-slate-200 pb-2 last:border-b-0 last:pb-0">
-                  <span className="text-sm font-semibold text-[#858796]">{label}</span>
-                  <span className="text-sm font-bold text-[#5a5c69]">{value}</span>
+                  <span className="text-sm font-medium text-slate-500">{label}</span>
+                  <span className="text-sm font-semibold text-slate-900">{value}</span>
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="rounded border border-slate-200 bg-[#f8f9fc] p-5">
-            <h3 className="mb-4 text-sm font-bold uppercase tracking-wide text-[#5a5c69]">API Connection Status</h3>
+          <div className="rounded-lg border border-[#e2e8f0] bg-[#f8fafc] p-5">
+            <h3 className="mb-4 text-xs font-semibold uppercase tracking-wide text-slate-500">API Connection Status</h3>
             <div className="space-y-3">
               <div className="flex items-center justify-between gap-3">
-                <span className="text-sm font-semibold text-[#858796]">API URL</span>
-                <span className="text-sm font-bold text-[#5a5c69] break-all">{apiUrl}</span>
+                <span className="text-sm font-medium text-slate-500">API URL</span>
+                <span className="text-sm font-semibold text-slate-900 break-all">{apiUrl}</span>
               </div>
 
               <div className="flex items-center justify-between gap-3">
-                <span className="text-sm font-semibold text-[#858796]">Status</span>
+                <span className="text-sm font-medium text-slate-500">Status</span>
                 <span
                   className={`inline-flex rounded-full px-2.5 py-1 text-xs font-bold ring-1 ring-inset ${
                     status === 'Connected'
@@ -95,7 +95,7 @@ export default function SettingsPage() {
                 type="button"
                 onClick={handleTest}
                 disabled={testing}
-                className="mt-2 rounded bg-[#4e73df] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-[#2e59d9] disabled:cursor-not-allowed disabled:opacity-60 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#4e73df]"
+                className="mt-2 rounded-md bg-[#1e293b] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2"
               >
                 {testing ? 'Testing...' : 'Test Connection'}
               </button>

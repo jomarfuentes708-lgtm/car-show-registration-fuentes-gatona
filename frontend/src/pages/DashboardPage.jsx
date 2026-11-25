@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import KpiCards from '../components/KpiCards';
-import NewRegistrationModal from '../components/NewRegistrationModal';
 import RegistrationTable from '../components/RegistrationTable';
 
 const API_URL = (import.meta.env.VITE_API_URL || 'http://localhost:5205').replace(/\/$/, '');
@@ -9,7 +8,7 @@ const STATUSES = ['All', 'Pending', 'Confirmed', 'CheckedIn', 'Cancelled'];
 const PAGE_SIZES = [5, 10, 20];
 
 const fieldClass =
-  'w-full rounded border border-slate-300 bg-white px-3 py-2 text-sm text-[#5a5c69] focus:border-[#4e73df] focus:outline-none focus:ring-2 focus:ring-[#4e73df]/30';
+  'w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 placeholder:text-slate-400 focus:border-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-200';
 
 function pageWindow(current, total) {
   const size = 5;
@@ -41,8 +40,6 @@ export default function DashboardPage({ showKpis = true }) {
   const [data, setData] = useState({ items: [], page: 1, pageSize: 10, totalCount: 0, totalPages: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
-  const [reloadKey, setReloadKey] = useState(0);
-  const [modalOpen, setModalOpen] = useState(false);
 
   // Debounce the name search (~400ms) and go back to page 1.
   useEffect(() => {
@@ -76,7 +73,7 @@ export default function DashboardPage({ showKpis = true }) {
       });
 
     return () => controller.abort();
-  }, [reloadKey]);
+  }, []);
 
   // Registrations list
   useEffect(() => {
@@ -96,11 +93,11 @@ export default function DashboardPage({ showKpis = true }) {
     fetchJson(`${API_URL}/api/registrations?${params.toString()}`, { signal: controller.signal })
       .then((json) => {
         setData({
-          items: Array.isArray(json.items) ? json.items : [],
-          page: Number(json.page) || 1,
-          pageSize: Number(json.pageSize) || pageSize,
-          totalCount: Number(json.totalCount) || 0,
-          totalPages: Number(json.totalPages) || 0,
+          items: Array.isArray(json.items) ? json.items : (Array.isArray(json.Items) ? json.Items : []),
+          page: Number(json.page ?? json.Page) || 1,
+          pageSize: Number(json.pageSize ?? json.PageSize) || pageSize,
+          totalCount: Number(json.totalCount ?? json.TotalCount) || 0,
+          totalPages: Number(json.totalPages ?? json.TotalPages) || 0,
         });
       })
       .catch((err) => {
@@ -113,7 +110,7 @@ export default function DashboardPage({ showKpis = true }) {
       });
 
     return () => controller.abort();
-  }, [search, type, status, page, pageSize, reloadKey]);
+  }, [search, type, status, page, pageSize]);
 
   const clearFilters = () => {
     setSearchInput('');
@@ -124,7 +121,6 @@ export default function DashboardPage({ showKpis = true }) {
   };
 
   const retry = () => setReloadKey((k) => k + 1);
-  const refreshAll = () => setReloadKey((k) => k + 1);
 
   const { totalCount, totalPages } = data;
   const from = totalCount === 0 ? 0 : (page - 1) * pageSize + 1;
@@ -133,28 +129,22 @@ export default function DashboardPage({ showKpis = true }) {
   const nextDisabled = loading || page >= totalPages || totalPages === 0;
 
   const pageBtn =
-    'min-w-[2.25rem] rounded border px-3 py-1.5 text-sm font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[#4e73df]';
+    'min-w-[2.25rem] rounded-md border px-3 py-1.5 text-sm font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-300';
 
   return (
     <div className="space-y-6">
-      <NewRegistrationModal isOpen={modalOpen} onClose={() => setModalOpen(false)} onCreated={refreshAll} />
-
       {showKpis && <KpiCards summary={summary} loading={summaryLoading} />}
 
-      <section className="rounded bg-white shadow-[0_.15rem_1.75rem_0_rgba(58,59,69,.15)]">
+      <section className="overflow-hidden rounded-lg border border-slate-200 bg-white">
         <header className="flex items-center justify-between gap-3 border-b border-slate-200 px-5 py-4">
-          <h2 className="text-base font-bold text-[#4e73df]">Registrations</h2>
-          <button
-            type="button"
-            onClick={() => setModalOpen(true)}
-            className="rounded bg-[#4e73df] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-[#2e59d9] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#4e73df]"
-          >
-            + New Registration
-          </button>
+          <div>
+            <h2 className="text-base font-semibold text-slate-900">Registrations</h2>
+            <p className="mt-0.5 text-xs text-slate-500">Manage event participants and payment status</p>
+          </div>
         </header>
 
         {/* Filters */}
-        <div className="grid grid-cols-1 gap-3 border-b border-slate-200 bg-[#f8f9fc] px-5 py-4 md:grid-cols-[1fr_12rem_12rem_auto]">
+        <div className="grid grid-cols-1 gap-3 border-b border-slate-200 bg-slate-50/60 px-5 py-4 md:grid-cols-[1fr_12rem_12rem_auto]">
           <input
             type="search"
             value={searchInput}
@@ -196,9 +186,9 @@ export default function DashboardPage({ showKpis = true }) {
           <button
             type="button"
             onClick={clearFilters}
-            className="rounded border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-[#5a5c69] transition hover:bg-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#4e73df]"
+            className="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400"
           >
-            Clear Filters
+            Clear filters
           </button>
         </div>
 
@@ -213,7 +203,7 @@ export default function DashboardPage({ showKpis = true }) {
 
         {/* Footer */}
         {!error && (
-          <footer className="flex flex-col gap-3 border-t border-slate-200 px-5 py-4 text-sm text-[#858796] lg:flex-row lg:items-center lg:justify-between">
+          <footer className="flex flex-col gap-3 border-t border-slate-200 px-5 py-4 text-sm text-slate-500 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex flex-wrap items-center gap-4">
               <span>
                 Showing {from}–{to} of {totalCount.toLocaleString('en-US')}
@@ -226,7 +216,7 @@ export default function DashboardPage({ showKpis = true }) {
                     setPageSize(Number(e.target.value));
                     setPage(1);
                   }}
-                  className="rounded border border-slate-300 bg-white px-2 py-1 text-sm text-[#5a5c69] focus:border-[#4e73df] focus:outline-none"
+                  className="rounded-md border border-slate-300 bg-white px-2 py-1 text-sm text-slate-700 focus:border-slate-500 focus:outline-none"
                 >
                   {PAGE_SIZES.map((n) => (
                     <option key={n} value={n}>
@@ -242,7 +232,7 @@ export default function DashboardPage({ showKpis = true }) {
                 type="button"
                 disabled={prevDisabled}
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
-                className={`${pageBtn} border-slate-300 bg-white text-[#5a5c69] hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-white`}
+                className={`${pageBtn} border-slate-300 bg-white text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-white`}
               >
                 Previous
               </button>
@@ -256,8 +246,8 @@ export default function DashboardPage({ showKpis = true }) {
                     aria-current={n === page ? 'page' : undefined}
                     className={`${pageBtn} disabled:cursor-not-allowed ${
                       n === page
-                        ? 'border-[#4e73df] bg-[#4e73df] text-white'
-                        : 'border-slate-300 bg-white text-[#4e73df] hover:bg-slate-100'
+                        ? 'border-slate-900 bg-slate-900 text-white'
+                        : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50'
                     }`}
                   >
                     {n}
@@ -267,7 +257,7 @@ export default function DashboardPage({ showKpis = true }) {
                 type="button"
                 disabled={nextDisabled}
                 onClick={() => setPage((p) => p + 1)}
-                className={`${pageBtn} border-slate-300 bg-white text-[#5a5c69] hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-white`}
+                className={`${pageBtn} border-slate-300 bg-white text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-white`}
               >
                 Next
               </button>

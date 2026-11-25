@@ -3,13 +3,13 @@ import { useEffect, useMemo, useState } from 'react';
 const API_URL = (import.meta.env.VITE_API_URL || 'http://localhost:5205').replace(/\/$/, '');
 
 const CARD_STYLES = {
-  Confirmed: 'border-l-[#36b9cc] text-[#36b9cc]',
-  CheckedIn: 'border-l-[#1cc88a] text-[#1cc88a]',
-  Pending: 'border-l-[#f6c23e] text-[#f6c23e]',
-  Cancelled: 'border-l-[#e74a3b] text-[#e74a3b]',
-  Exhibitor: 'border-l-[#4e73df] text-[#4e73df]',
-  Competitor: 'border-l-[#858796] text-[#858796]',
-  VIP: 'border-l-[#9d4edd] text-[#9d4edd]',
+  Confirmed: 'border-l-slate-400 text-slate-700',
+  CheckedIn: 'border-l-slate-500 text-slate-700',
+  Pending: 'border-l-slate-300 text-slate-600',
+  Cancelled: 'border-l-slate-300 text-slate-500',
+  Exhibitor: 'border-l-slate-700 text-slate-800',
+  Competitor: 'border-l-slate-400 text-slate-700',
+  VIP: 'border-l-slate-500 text-slate-700',
 };
 
 async function fetchJson(url, options = {}) {
@@ -109,14 +109,14 @@ export default function ReportsPage() {
 
   return (
     <div className="space-y-6">
-      <section className="rounded bg-white shadow-[0_.15rem_1.75rem_0_rgba(58,59,69,.15)]">
-        <header className="flex items-center justify-between gap-3 border-b border-slate-200 px-5 py-4">
-          <h2 className="text-base font-bold text-[#4e73df]">Reports</h2>
+      <section className="overflow-hidden rounded-lg border border-[#e2e8f0] bg-white">
+        <header className="flex items-center justify-between gap-3 border-b border-[#e2e8f0] px-5 py-4">
+          <h2 className="text-base font-semibold text-slate-900">Reports</h2>
           <button
             type="button"
             onClick={() => exportCsv(items)}
             disabled={loading || !items.length}
-            className="rounded bg-[#4e73df] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-[#2e59d9] disabled:cursor-not-allowed disabled:opacity-60 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#4e73df]"
+            className="rounded-md bg-[#1e293b] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2"
           >
             Export CSV
           </button>
